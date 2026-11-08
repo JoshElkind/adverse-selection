@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import bisect
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +12,7 @@ SAMPLE_URL = (
 )
 MESSAGE_NAME = "AAPL_2012-06-21_34200000_57600000_message_1.csv"
 BOOK_NAME = "AAPL_2012-06-21_34200000_57600000_orderbook_1.csv"
+HORIZONS = (1.0, 10.0)
 
 
 @dataclass(frozen=True)
@@ -31,6 +33,15 @@ class Execution:
     # +1 buyer-initiated, -1 seller-initiated
     sign: int
     pre: Quote
+
+
+@dataclass(frozen=True)
+class HorizonStats:
+    seconds: float
+    trades: int
+    shares: int
+    effective_bps: float
+    realized_bps: float
 
 
 def download_sample(dest: Path) -> Path:
@@ -71,10 +82,53 @@ def load_zip(path: Path) -> tuple[list[float], list[Execution], list[Quote]]:
     return times, executions, quotes
 
 
+def summarize(path: Path, horizons: tuple[float, ...] = HORIZONS) -> list[HorizonStats]:
+    times, executions, quotes = load_zip(path)
+    stats: list[HorizonStats] = []
+    for horizon in horizons:
+        eff_num = real_num = 0.0
+        shares = 0
+        trades = 0
+        for execution in executions:
+            future_at = execution.time + horizon
+            index = bisect.bisect_right(times, future_at) - 1
+            future = quotes[index]
+            mid = execution.pre.mid
+            weight = execution.size
+            effective = 10_000 * 2 * execution.sign * (execution.price - mid) / mid
+            realized = 10_000 * 2 * execution.sign * (execution.price - future.mid) / mid
+            eff_num += weight * effective
+            real_num += weight * realized
+            shares += weight
+            trades += 1
+        if shares == 0:
+            raise ValueError(f"no executions usable at horizon {horizon}")
+        stats.append(
+            HorizonStats(
+                seconds=horizon,
+                trades=trades,
+                shares=shares,
+                effective_bps=eff_num / shares,
+                realized_bps=real_num / shares,
+            )
+        )
+    return stats
+
+
+def format_stats(stats: list[HorizonStats]) -> str:
+    lines = []
+    for row in stats:
+        lines.append(
+            f"{row.seconds:>5.1f}s trades={row.trades} shares={row.shares} "
+            f"effective_bps={row.effective_bps:.2f} "
+            f"realized_bps={row.realized_bps:.2f}"
+        )
+    return "\n".join(lines)
+
+
 def main() -> None:
     sample = download_sample(Path(__file__).resolve().parent / "data" / "AAPL_2012-06-21_1.zip")
-    _times, executions, quotes = load_zip(sample)
-    print(f"{len(quotes)} events, {len(executions)} executions")
+    print(format_stats(summarize(sample)))
 
 
 if __name__ == "__main__":
