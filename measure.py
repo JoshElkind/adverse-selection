@@ -69,6 +69,8 @@ def load_zip(path: Path) -> tuple[list[float], list[Execution], list[Quote]]:
         if event_type != "4" or index == 0:
             continue
         pre = quotes[index - 1]
+        if pre.bid <= 0 or pre.ask <= pre.bid:
+            continue
         direction = int(direction_s)
         executions.append(
             Execution(
