@@ -72,6 +72,8 @@ def load_zip(path: Path) -> tuple[list[float], list[Execution], list[Quote]]:
         if pre.bid <= 0 or pre.ask <= pre.bid:
             continue
         direction = int(direction_s)
+        if direction not in (-1, 1):
+            continue
         executions.append(
             Execution(
                 time=time,
