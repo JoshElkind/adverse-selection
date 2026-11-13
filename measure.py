@@ -96,7 +96,11 @@ def summarize(path: Path, horizons: tuple[float, ...] = HORIZONS) -> list[Horizo
         for execution in executions:
             future_at = execution.time + horizon
             index = bisect.bisect_right(times, future_at) - 1
+            if index < 0 or index >= len(quotes):
+                continue
             future = quotes[index]
+            if future.bid <= 0 or future.ask <= future.bid:
+                continue
             mid = execution.pre.mid
             weight = execution.size
             effective = 10_000 * 2 * execution.sign * (execution.price - mid) / mid
