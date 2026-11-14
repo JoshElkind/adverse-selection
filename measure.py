@@ -42,6 +42,7 @@ class HorizonStats:
     shares: int
     effective_bps: float
     realized_bps: float
+    impact_bps: float
 
 
 def download_sample(dest: Path) -> Path:
@@ -90,7 +91,7 @@ def summarize(path: Path, horizons: tuple[float, ...] = HORIZONS) -> list[Horizo
     times, executions, quotes = load_zip(path)
     stats: list[HorizonStats] = []
     for horizon in horizons:
-        eff_num = real_num = 0.0
+        eff_num = real_num = impact_num = 0.0
         shares = 0
         trades = 0
         for execution in executions:
@@ -107,6 +108,7 @@ def summarize(path: Path, horizons: tuple[float, ...] = HORIZONS) -> list[Horizo
             realized = 10_000 * 2 * execution.sign * (execution.price - future.mid) / mid
             eff_num += weight * effective
             real_num += weight * realized
+            impact_num += weight * (effective - realized)
             shares += weight
             trades += 1
         if shares == 0:
@@ -118,6 +120,7 @@ def summarize(path: Path, horizons: tuple[float, ...] = HORIZONS) -> list[Horizo
                 shares=shares,
                 effective_bps=eff_num / shares,
                 realized_bps=real_num / shares,
+                impact_bps=impact_num / shares,
             )
         )
     return stats
@@ -129,7 +132,8 @@ def format_stats(stats: list[HorizonStats]) -> str:
         lines.append(
             f"{row.seconds:>5.1f}s trades={row.trades} shares={row.shares} "
             f"effective_bps={row.effective_bps:.2f} "
-            f"realized_bps={row.realized_bps:.2f}"
+            f"realized_bps={row.realized_bps:.2f} "
+            f"impact_bps={row.impact_bps:.2f}"
         )
     return "\n".join(lines)
 
