@@ -12,7 +12,7 @@ SAMPLE_URL = (
 )
 MESSAGE_NAME = "AAPL_2012-06-21_34200000_57600000_message_1.csv"
 BOOK_NAME = "AAPL_2012-06-21_34200000_57600000_orderbook_1.csv"
-HORIZONS = (1.0, 10.0)
+HORIZONS = (0.1, 1.0, 10.0, 60.0)
 
 
 @dataclass(frozen=True)
