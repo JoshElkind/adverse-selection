@@ -47,7 +47,7 @@ class HorizonStats:
 
 def download_sample(dest: Path) -> Path:
     dest.parent.mkdir(parents=True, exist_ok=True)
-    if not dest.exists():
+    if not dest.exists() or dest.stat().st_size < 1000:
         urlretrieve(SAMPLE_URL, dest)
     return dest
 
@@ -56,6 +56,8 @@ def load_zip(path: Path) -> tuple[list[float], list[Execution], list[Quote]]:
     with zipfile.ZipFile(path) as archive:
         messages = archive.read(MESSAGE_NAME).decode().splitlines()
         books = archive.read(BOOK_NAME).decode().splitlines()
+    if len(messages) != len(books):
+        raise ValueError("message and orderbook files have different lengths")
 
     times: list[float] = []
     quotes: list[Quote] = []
