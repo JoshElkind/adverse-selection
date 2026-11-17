@@ -44,6 +44,11 @@ class MeasureTests(unittest.TestCase):
         # future mid is 104, realized = 2 * (102 - 104) / 101 * 10000
         self.assertAlmostEqual(stats[1.0].realized_bps, 2 * (102 - 104) / 101 * 10_000, places=4)
 
+    def test_prices_are_in_lobster_units_in_the_fixture(self):
+        # The fixture stores 101 dollars as 1_010_000. The assertion above uses
+        # dollar prices only as a ratio, which matches the tick ratio.
+        self.assertEqual(Quote(1000000, 1020000).mid, 1010000)
+
 
 if __name__ == "__main__":
     unittest.main()
