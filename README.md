@@ -14,3 +14,9 @@ python3 measure.py
 ```
 
 `measure.py` downloads the sample zip from LOBSTER into `data/` and does not commit it.
+
+## What to be able to explain
+
+- Effective spread is what you charge at the trade. Realized spread is what you have left after the mid moves.
+- The sign of a LOBSTER execution is the resting order, which is the opposite of the taker.
+- One day and one name is a measurement, not a strategy.

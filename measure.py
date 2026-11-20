@@ -1,3 +1,11 @@
+"""Realized spread on the public LOBSTER AAPL sample for 2012-06-21.
+
+The order-book row on line i is the book after message i. A visible execution
+is signed from the resting order: a sell limit execution is buyer-initiated.
+The mid used for the effective spread is the mid before that execution.
+The mid at horizon h is the book after the last event at or before t+h.
+"""
+
 from __future__ import annotations
 
 import bisect
